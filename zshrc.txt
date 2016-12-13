@@ -1,0 +1,245 @@
+#---------------------------------------------------------------------
+#      Oh My ZSH
+#---------------------------------------------------------------------
+# Path to your oh-my-zsh configuration.
+ZSH=~/.oh-my-zsh
+
+# Set name of the theme to load.
+# Look in ~/.oh-my-zsh/themes/
+# Optionally, if you set this to "random", it'll load a random theme each
+# time that oh-my-zsh is loaded.
+ZSH_THEME="bureau"
+
+# Example aliases
+alias zshconfig="subl ~/.zshrc"
+alias ohmyzsh="subl ~/.oh-my-zsh"
+
+# Set to this to use case-sensitive completion
+# CASE_SENSITIVE="true"
+
+# Comment this out to disable bi-weekly auto-update checks
+# DISABLE_AUTO_UPDATE="true"
+
+# Uncomment to change how many often would you like to wait before auto-updates occur? (in days)
+# export UPDATE_ZSH_DAYS=13
+
+# Uncomment following line if you want to disable colors in ls
+# DISABLE_LS_COLORS="true"
+
+# Uncomment following line if you want to disable autosetting terminal title.
+# DISABLE_AUTO_TITLE="true"
+
+# Uncomment following line if you want red dots to be displayed while waiting for completion
+# COMPLETION_WAITING_DOTS="true"
+
+# Which plugins would you like to load? (plugins can be found in ~/.oh-my-zsh/plugins/*)
+# Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
+# Example format: plugins=(rails git textmate ruby lighthouse)
+plugins=(git brew ruby gem osx rvm coffee zsh-syntax-highlighting)
+
+source $ZSH/oh-my-zsh.sh
+
+#---------------------------------------------------------------------
+#      Functions
+#---------------------------------------------------------------------
+pushPath() 
+{
+# Push a target (directory) onto the specified path type.
+#
+# Param 1: The type of path (Eg. PATH, CLASSPATH, LD_LIBRARY_PATH).
+# Param 2: The name of the directory to be added to the path.
+#
+  if [ $# -eq 2 ]; then
+    PATH_TYPE=$1
+    eval PATH_CONTENT="\$$PATH_TYPE"
+    TARGET=$2
+
+    # Check if target exists or for a CLASSPATH jar file
+    if [ -d "$TARGET" -o -f "$TARGET" -a $PATH_TYPE = 'CLASSPATH' ]; then
+      if [ -z "$PATH_CONTENT" ]; then
+        # This path is is empty
+        eval $PATH_TYPE="$TARGET"
+      else
+        # Check if path already contains the directory
+        FOUND=0
+        for i in $(eval echo "\$$PATH_TYPE" | /usr/bin/tr ':' ' ')
+        do
+          if [ "$i" = "$TARGET" ]; then
+            FOUND=1
+            #echo "WARNING: $TARGET already found in $PATH_TYPE"
+            break
+          fi
+        done
+        if [ "$FOUND" -eq 0 ]; then
+          # Add the directory to the path
+          eval $PATH_TYPE="$PATH_CONTENT:$TARGET"
+        fi
+      fi
+    fi
+  else
+    echo "WARNING: Bad pushPath() usage"
+  fi
+}
+
+loop() {
+# Loop a command
+  while true
+    do $@
+    sleep 2
+    echo
+  done
+}
+
+# Thanks Brett Terpstra for the following goodness
+function console () {
+  if [[ $# > 0 ]]; then
+    query=$(echo "$*"|tr -s ' ' '|')
+    tail -f /var/log/system.log|grep -i --color=auto -E "$query"
+  else
+    tail -f /var/log/system.log
+  fi
+}
+psg () { #find and list processes matching a case-insensitive partial-match string
+  ps Ao pid,comm|awk '{match($0,/[^\/]+$/); print substr($0,RSTART,RLENGTH)": "$1}'|grep -i $1|grep -v grep
+}
+
+#---------------------------------------------------------------------
+#   Setup Path Variables
+#---------------------------------------------------------------------
+export PATH=.:/usr/local/bin:$PATH
+
+# Set Paths
+pushPath "PATH" "$HOME/bin"
+pushPath "PATH" "/usr/bin"
+pushPath "PATH" "/usr/sbin"
+pushPath "PATH" "/bin"
+pushPath "PATH" "/usr/local/sbin"
+pushPath "PATH" "/usr/local/mysql/bin"
+pushPath "PATH" "/usr/local/share/npm/bin"
+
+# Node.js path
+export NODE_PATH="/usr/local/lib/node"
+
+# Build Perl5 Library path
+export PERL5LIB=''
+pushPath "PERL5LIB" "$HOME/bin"
+pushPath "PERL5LIB" "$HOME/perl5lib"
+
+# Build Man Page path
+export MANPATH=''
+pushPath "MANPATH" "/usr/bin/man"
+pushPath "MANPATH" "/usr/local/share/man"
+pushPath "MANPATH" "/usr/share/man"
+
+# Build Classpath
+export CLASSPATH=''
+
+# Ruby RVM Setup
+[[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm"  # This loads RVM into a shell session.
+pushPath "PATH" "$HOME/.rvm/bin"
+
+# Build Ruby library path
+#export RUBYLIB=''
+#pushPath "RUBYLIB" "$HOME/bin"
+
+export GEM_PATH=.:$GEM_PATH
+
+# SASS PATH
+# export SASS_PATH=''
+# COMPASS_PATH=(${(f)"$(/bin/ls -1 $GEM_HOME/gems | grep compass-core | tail -1)"})
+# pushPath "SASS_PATH" "$GEM_HOME/gems/$COMPASS_PATH/stylesheets"
+
+# Init fasd - dir bookmarking/fast switching
+local fasd_cache
+fasd_cache="$HOME/.fasd-init"
+if [ "$(command -v fasd)" -nt "$fasd_cache" -o ! -s "$fasd_cache" ]; then
+  fasd --init posix-alias zsh-hook zsh-ccomp zsh-ccomp-install zsh-wcomp zsh-wcomp-install  >| "$fasd_cache"
+fi
+source $fasd_cache
+unset fasd_cache
+
+
+#---------------------------------------------------------------------
+#   Completion Settings
+#---------------------------------------------------------------------
+# compsys initialization
+autoload -U compinit
+compinit
+
+# show completion menu when number of options is at least 2
+zstyle ':completion:*' menu select=2
+zstyle ':completion:*' verbose yes
+zstyle ':completion:*:descriptions' format '%B%d%b'
+zstyle ':completion:*:messages' format '%d'
+zstyle ':completion:*:warnings' format 'No matches for: %d'
+
+# stake completion
+#_stake_options=(${(f)"$(stake help -c)"})
+_stake_options=(${(f)"$(cat ~/.stake_options)"})
+Foundation=(${(f)"$(/bin/ls -1 $HOME/Development/rw-stacks | grep Foundation)"})
+stacks=(${(f)"$(/bin/ls -1 $HOME/Development/rw-stacks | egrep -v '^_' | grep -v '\.' | grep -v bower_components | grep -v node_modules | grep -v vendor)"})
+bundles=(${(f)"$(/bin/ls -1 $HOME/Development/rw-stacks/_Bundles)"})
+
+_stake() {
+  if ((CURRENT == 2)); then
+    compadd $_stake_options
+  else
+    cmd="$words[2]"
+    case $cmd in
+      bundle)
+        compadd $bundles
+      ;;
+      *)
+        compadd $stacks
+      ;;
+    esac
+  fi
+}
+compdef _stake stake
+
+# homebrew completion
+fpath=($HOME/.zsh/func $fpath)
+typeset -U fpath
+
+#---------------------------------------------------------------------
+#      Aliases
+#---------------------------------------------------------------------
+alias  env='env | sort'
+alias  mx="chmod +x" 
+alias  mw="chmod +w" 
+alias  lt="ls -lrt" 
+alias  las="ls -las" 
+alias  profile="source $HOME/.zshrc"
+
+alias  ssh='ssh -2'
+
+alias gs='git status'
+alias gcam='git commit -a -m'
+
+alias jshell='osascript -l JavaScript -i'
+alias jpegmini='imageOptim --jpeg-mini'
+
+alias badplist="ack '<data>' --type=plist -l | egrep '\.source'"
+#---------------------------------------------------------------------
+#      History & Misc
+#---------------------------------------------------------------------
+
+# History Settings
+export HISTSIZE=10000
+export HISTFILE=~/.zhistory
+export SAVEHIST=10000
+setopt hist_reduce_blanks
+setopt hist_ignore_dups
+setopt hist_expire_dups_first
+setopt append_history
+
+# Set max file open limits
+ulimit -n 1024
+
+#Set displayed
+export EDITOR=vi
+export PAGER=more
+
+
+# delete old time machine backups
+# sudo tmutil delete /full/path/to/backup/Backups.backupdb/machine/backup-name
