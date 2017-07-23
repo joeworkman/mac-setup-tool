@@ -15,5 +15,4 @@ rm -r `brew --cache`
 npm update -g 
 
 # Composer Update
-	
-
+composer self-update
