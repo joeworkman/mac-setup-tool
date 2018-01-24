@@ -23,19 +23,19 @@ brew tap caskroom/cask
 IFS=$'\n'
 
 # Loop brew install
-if [[ -a brew.txt ]];then 
+if [[ -a brew.txt ]];then
 	for package in `cat brew.txt`; do
 		brew install $package
 	done
 fi
 # Loop cask install
-if [[ -a cask.txt ]];then 
+if [[ -a cask.txt ]];then
 	for package in `cat cask.txt`; do
 		brew cask install $package
 	done
 fi
 # Loop MAS install
-if [[ -a mas.txt ]];then 
+if [[ -a mas.txt ]];then
 	mas signin $MAS_EMAIL $MAS_PASSWORD
 	for package in `cat mas.txt`; do
 		id=`echo $package | cut -f1 -d' '`
@@ -49,9 +49,16 @@ rm -r `brew --cache`
 rm -rf /usr/local/Caskroom/*
 
 # Node
-if [[ -a npm.txt ]];then 
+if [[ -a npm.txt ]];then
 	for package in `cat npm.txt`; do
 		npm install -g $package
+	done
+fi
+
+# Loop gems install
+if [[ -a gems.txt ]];then
+	for package in `cat gems.txt`; do
+		gem install $package
 	done
 fi
 
@@ -63,25 +70,13 @@ cp default_gitignore.txt ~/.gitignore
 git config --global core.excludesfile '~/.gitignore'
 
 # Sublime Text CLI
-if [[ -a /Applications/Sublime\ Text.app/Contents/SharedSupport/bin/subl ]];then 
+if [[ -a /Applications/Sublime\ Text.app/Contents/SharedSupport/bin/subl ]];then
 	ln -s /Applications/Sublime\ Text.app/Contents/SharedSupport/bin/subl /usr/local/bin/subl
 fi
 
-source ~/.zshrc
-
-# RVM
-gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3
-curl -sSL https://get.rvm.io | bash -s stable
-
-rvm install 2.3
-rvm use 2.3
-rvm alias create default 2.3
-
-# Loop gems install
-if [[ -a gems.txt ]];then 
-	for package in `cat gems.txt`; do
-		gem install $package
-	done
+# VS Code CLI
+if [[ -a /Applications/Visual\ Studio\ Code.app/Contents/Resources/app/bin/code ]];then
+	ln -s /Applications/Visual\ Studio\ Code.app/Contents/Resources/app/bin/code /usr/local/bin/code
 fi
 
 source ~/.zshrc

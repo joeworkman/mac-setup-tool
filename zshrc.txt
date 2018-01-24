@@ -11,8 +11,8 @@ ZSH=~/.oh-my-zsh
 ZSH_THEME="bureau"
 
 # Example aliases
-alias zshconfig="subl ~/.zshrc"
-alias ohmyzsh="subl ~/.oh-my-zsh"
+#alias zshconfig="subl ~/.zshrc"
+#alias ohmyzsh="subl ~/.oh-my-zsh"
 
 # Set to this to use case-sensitive completion
 # CASE_SENSITIVE="true"
@@ -35,14 +35,14 @@ alias ohmyzsh="subl ~/.oh-my-zsh"
 # Which plugins would you like to load? (plugins can be found in ~/.oh-my-zsh/plugins/*)
 # Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
-plugins=(git brew ruby gem osx rvm coffee zsh-syntax-highlighting)
+plugins=(osx zsh-syntax-highlighting common-aliases gitfast npm brew ruby gem)
 
 source $ZSH/oh-my-zsh.sh
 
 #---------------------------------------------------------------------
 #      Functions
 #---------------------------------------------------------------------
-pushPath() 
+pushPath()
 {
 # Push a target (directory) onto the specified path type.
 #
@@ -120,34 +120,13 @@ pushPath "PATH" "/usr/local/share/npm/bin"
 # Node.js path
 export NODE_PATH="/usr/local/lib/node"
 
-# Build Perl5 Library path
-export PERL5LIB=''
-pushPath "PERL5LIB" "$HOME/bin"
-pushPath "PERL5LIB" "$HOME/perl5lib"
-
 # Build Man Page path
 export MANPATH=''
 pushPath "MANPATH" "/usr/bin/man"
 pushPath "MANPATH" "/usr/local/share/man"
 pushPath "MANPATH" "/usr/share/man"
 
-# Build Classpath
-export CLASSPATH=''
-
-# Ruby RVM Setup
-[[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm"  # This loads RVM into a shell session.
-pushPath "PATH" "$HOME/.rvm/bin"
-
-# Build Ruby library path
-#export RUBYLIB=''
-#pushPath "RUBYLIB" "$HOME/bin"
-
 export GEM_PATH=.:$GEM_PATH
-
-# SASS PATH
-# export SASS_PATH=''
-# COMPASS_PATH=(${(f)"$(/bin/ls -1 $GEM_HOME/gems | grep compass-core | tail -1)"})
-# pushPath "SASS_PATH" "$GEM_HOME/gems/$COMPASS_PATH/stylesheets"
 
 # Init fasd - dir bookmarking/fast switching
 local fasd_cache
@@ -173,30 +152,6 @@ zstyle ':completion:*:descriptions' format '%B%d%b'
 zstyle ':completion:*:messages' format '%d'
 zstyle ':completion:*:warnings' format 'No matches for: %d'
 
-# stake completion
-#_stake_options=(${(f)"$(stake help -c)"})
-_stake_options=(${(f)"$(cat ~/.stake_options)"})
-Foundation=(${(f)"$(/bin/ls -1 $HOME/Development/rw-stacks | grep Foundation)"})
-stacks=(${(f)"$(/bin/ls -1 $HOME/Development/rw-stacks | egrep -v '^_' | grep -v '\.' | grep -v bower_components | grep -v node_modules | grep -v vendor)"})
-bundles=(${(f)"$(/bin/ls -1 $HOME/Development/rw-stacks/_Bundles)"})
-
-_stake() {
-  if ((CURRENT == 2)); then
-    compadd $_stake_options
-  else
-    cmd="$words[2]"
-    case $cmd in
-      bundle)
-        compadd $bundles
-      ;;
-      *)
-        compadd $stacks
-      ;;
-    esac
-  fi
-}
-compdef _stake stake
-
 # homebrew completion
 fpath=($HOME/.zsh/func $fpath)
 typeset -U fpath
@@ -205,10 +160,10 @@ typeset -U fpath
 #      Aliases
 #---------------------------------------------------------------------
 alias  env='env | sort'
-alias  mx="chmod +x" 
-alias  mw="chmod +w" 
-alias  lt="ls -lrt" 
-alias  las="ls -las" 
+alias  mx="chmod +x"
+alias  mw="chmod +w"
+alias  lt="ls -lrt"
+alias  las="ls -las"
 alias  profile="source $HOME/.zshrc"
 
 alias  ssh='ssh -2'
@@ -219,7 +174,6 @@ alias gcam='git commit -a -m'
 alias jshell='osascript -l JavaScript -i'
 alias jpegmini='imageOptim --jpeg-mini'
 
-alias badplist="ack '<data>' --type=plist -l | egrep '\.source'"
 #---------------------------------------------------------------------
 #      History & Misc
 #---------------------------------------------------------------------
@@ -233,13 +187,9 @@ setopt hist_ignore_dups
 setopt hist_expire_dups_first
 setopt append_history
 
-# Set max file open limits
-ulimit -n 1024
-
 #Set displayed
 export EDITOR=vi
 export PAGER=more
-
 
 # delete old time machine backups
 # sudo tmutil delete /full/path/to/backup/Backups.backupdb/machine/backup-name
