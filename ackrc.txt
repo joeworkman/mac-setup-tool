@@ -1,0 +1,13 @@
+--type-add=objc=.pch
+--type-set=xcode=.pbxproj,.pbxuser,.perspectivev3
+--type-set=ragel=.rl
+--type-set=nib=.xib
+--type-set=plist=.plist
+--type-set=md=.md
+--type-set=scss=.scss
+--type-set=tmstuff=.tmproj,.tm_build_errors
+--nonib
+--notmstuff
+--noxcode
+--ignore-dir=vendor
+--ignore-dir=node_modules

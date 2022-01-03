@@ -35,7 +35,7 @@ ZSH_THEME="bureau"
 # Which plugins would you like to load? (plugins can be found in ~/.oh-my-zsh/plugins/*)
 # Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
-plugins=(osx zsh-syntax-highlighting common-aliases gitfast npm brew ruby gem)
+plugins=(osx common-aliases gitfast git-flow brew zsh-syntax-highlighting zsh-autosuggestions zsh-completions zsh-history-substring-search)
 
 source $ZSH/oh-my-zsh.sh
 
@@ -99,9 +99,58 @@ function console () {
     tail -f /var/log/system.log
   fi
 }
+
 psg () { #find and list processes matching a case-insensitive partial-match string
   ps Ao pid,comm|awk '{match($0,/[^\/]+$/); print substr($0,RSTART,RLENGTH)": "$1}'|grep -i $1|grep -v grep
 }
+
+devstacks() {
+  STACKS_DIR=~/Library/Mobile\ Documents/com~apple~CloudDocs/RapidWeaver/Stacks
+  find $STACKS_DIR -name '*.devstack' | sed -E 's:.+Stacks/::'
+  find $STACKS_DIR -name '*.devstack' | wc -l | sed 's/ //g'
+}
+
+findandreplace() {
+  # Usage: findandreplace "Find This" "Replace With"
+  for file in `ack "$1" -l`; do
+    perl -pe s"#$1#$2#g" -i "$file"
+  done
+}
+
+jshash() {
+  # Usage: jshash "var myjs = true;"
+  hash=`echo $1 | openssl dgst -sha384 -binary | openssl base64 -A`
+  echo "sha384-$hash"
+  echo "sha384-$hash" | perl -pe "chomp" | pbcopy
+}
+
+plistmin() {
+  cd $STACKS_DEV
+  git status | grep plist | cut -f2 -d":" | xargs perl -pe 's/^\s+(.+)/$1/g' -i
+  cd -
+}
+
+gsync() {
+  git push
+  git checkout master
+  git push
+  git checkout develop
+}
+
+function exists { which $1 &> /dev/null }
+
+if exists percol; then
+    function percol_select_history() {
+        local tac
+        exists gtac && tac="gtac" || { exists tac && tac="tac" || { tac="tail -r" } }
+        BUFFER=$(fc -l -n 1 | eval $tac | percol --match-method regex --query "$LBUFFER")
+        CURSOR=$#BUFFER         # move cursor
+        zle -R -c               # refresh
+    }
+
+    zle -N percol_select_history
+    bindkey '^R' percol_select_history
+fi
 
 #---------------------------------------------------------------------
 #   Setup Path Variables
@@ -110,6 +159,9 @@ export PATH=.:/usr/local/bin:$PATH
 
 # Set Paths
 pushPath "PATH" "$HOME/bin"
+pushPath "PATH" "$HOME/.composer/vendor/bin"
+pushPath "PATH" "/usr/local/lib/ruby/gems/2.7.0/bin"
+pushPath "PATH" "/usr/local/opt/coreutils/libexec/gnubin"
 pushPath "PATH" "/usr/bin"
 pushPath "PATH" "/usr/sbin"
 pushPath "PATH" "/bin"
@@ -118,7 +170,7 @@ pushPath "PATH" "/usr/local/mysql/bin"
 pushPath "PATH" "/usr/local/share/npm/bin"
 
 # Node.js path
-export NODE_PATH="/usr/local/lib/node"
+# export NODE_PATH="/usr/local/lib/node"
 
 # Build Man Page path
 export MANPATH=''
@@ -137,6 +189,7 @@ fi
 source $fasd_cache
 unset fasd_cache
 
+export STACKS_DEV=$HOME/Development/stacks/
 
 #---------------------------------------------------------------------
 #   Completion Settings
@@ -173,6 +226,9 @@ alias gcam='git commit -a -m'
 
 alias jshell='osascript -l JavaScript -i'
 alias jpegmini='imageOptim --jpeg-mini'
+alias percolx='percol --match-method regex'
+alias phpcs='/usr/local/bin/phpcs --standard=PSR12 --ignore=vendor'
+alias phpserver="php -S localhost:8000"
 
 #---------------------------------------------------------------------
 #      History & Misc
@@ -188,8 +244,36 @@ setopt hist_expire_dups_first
 setopt append_history
 
 #Set displayed
-export EDITOR=vi
+export EDITOR=vim
 export PAGER=more
 
 # delete old time machine backups
 # sudo tmutil delete /full/path/to/backup/Backups.backupdb/machine/backup-name
+
+
+#---------------------------------------------------------------------
+# stake completion
+#---------------------------------------------------------------------
+#_stake_options=(${(f)"$(stake help -c)"})
+_stake_options=(${(f)"$(cat ~/.stake_options)"})
+stacks=(${(f)"$(/bin/ls -1 $STACKS_DEV | egrep -v '^_' | grep -v '\.' | grep -v bower_components | grep -v node_modules | grep -v vendor)"})
+
+_stake() {
+  if ((CURRENT == 2)); then
+    compadd $_stake_options
+  else
+    cmd="$words[2]"
+    case $cmd in
+      bundle)
+        compadd $bundles
+      ;;
+      *)
+        compadd $stacks
+      ;;
+    esac
+  fi
+}
+compdef _stake stake
+
+# PHP XDebug
+export XDEBUG_CONFIG="idekey=vscode"

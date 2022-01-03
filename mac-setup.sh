@@ -10,7 +10,7 @@ xcode-select --install
 #----------------------------
 # Homebrew
 #----------------------------
-/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
 export PATH="/usr/local/bin:$PATH"
 
@@ -31,7 +31,7 @@ fi
 # Loop cask install
 if [[ -a cask.txt ]];then
 	for package in `cat cask.txt`; do
-		brew cask install $package
+		brew install --cask $package
 	done
 fi
 # Loop MAS install
@@ -45,13 +45,14 @@ if [[ -a mas.txt ]];then
 fi
 
 # Remove brew cache
+brew cleanup
 rm -r `brew --cache`
 rm -rf /usr/local/Caskroom/*
 
 # Node
 if [[ -a npm.txt ]];then
 	for package in `cat npm.txt`; do
-		npm install -g $package
+		yarn global add $package
 	done
 fi
 
@@ -62,12 +63,12 @@ if [[ -a gems.txt ]];then
 	done
 fi
 
-# Oh-My-ZSH
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
-
-# Default .gitignore
-cp default_gitignore.txt ~/.gitignore
-git config --global core.excludesfile '~/.gitignore'
+# Loop composer install
+if [[ -a composer.txt ]];then
+	for package in `cat composer.txt`; do
+		composer global require $package
+	done
+fi
 
 # Sublime Text CLI
 if [[ -a /Applications/Sublime\ Text.app/Contents/SharedSupport/bin/subl ]];then
@@ -78,6 +79,24 @@ fi
 if [[ -a /Applications/Visual\ Studio\ Code.app/Contents/Resources/app/bin/code ]];then
 	ln -s /Applications/Visual\ Studio\ Code.app/Contents/Resources/app/bin/code /usr/local/bin/code
 fi
+
+# Loop VSCode Extension install
+if [[ -a vscode.txt ]];then
+	for package in `cat vscode.txt`; do
+		code --install-extension $package
+	done
+fi
+
+# Oh-My-ZSH
+sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+
+# Default .gitignore
+cp default_gitignore.txt ~/.gitignore
+git config --global core.excludesfile '~/.gitignore'
+
+cp zshrc.txt ~/.zshrc
+cp ackrc.txt ~/.ackrc
+cp fasd-init.txt ~/.fasd-init
 
 source ~/.zshrc
 

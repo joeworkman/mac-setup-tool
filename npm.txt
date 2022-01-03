@@ -1,4 +1,2 @@
-grunt-cli
-bower
-foundation-cli
 gulp
+grunt-cli
